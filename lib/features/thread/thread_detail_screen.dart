@@ -1340,6 +1340,7 @@ class _ThreadPaginationBar extends StatelessWidget {
         );
       },
     );
+    controller.dispose();
     if (selected != null) onPageSelected?.call(selected);
   }
 }

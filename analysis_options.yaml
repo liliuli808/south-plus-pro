@@ -4,4 +4,13 @@ analyzer:
 
 linter:
   rules:
-    avoid_print: false
+    - avoid_print: false
+    - prefer_const_constructors
+    - prefer_const_literals_to_create_immutables
+    - prefer_final_locals
+    - unnecessary_overrides
+    - unused_local_variable
+    - prefer_if_null_operators
+    - prefer_spread_collections
+    - avoid_unnecessary_containers
+    - use_super_parameters

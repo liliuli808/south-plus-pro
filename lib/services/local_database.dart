@@ -25,6 +25,11 @@ class LocalDatabase {
     return _instance!;
   }
 
+  static void closeInstance() {
+    _instance?.close();
+    _instance = null;
+  }
+
   final Database _db;
 
   void _migrate() {

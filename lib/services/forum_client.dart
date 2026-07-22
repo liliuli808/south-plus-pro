@@ -38,7 +38,12 @@ class ForumClient {
   Future<void>? _restoreFuture;
 
   Future<void> restoreCookies() {
-    return _restoreFuture ??= _restoreCookies();
+    if (_restoreFuture != null) return _restoreFuture!;
+    return _restoreFuture = _restoreCookies().catchError((Object error) {
+      _restoreFuture = null;
+      ForumTraceLogger.log('HTTP', 'Cookie restore failed: $error');
+      return Future<void>.error(error);
+    });
   }
 
   Future<String> get(String path) async {

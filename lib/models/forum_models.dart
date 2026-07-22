@@ -719,11 +719,7 @@ class ForumTaskState {
   bool get isWeeklyReward => name.contains('周常');
   bool get isAutoReward => isDailyReward || isWeeklyReward;
 
-  Duration? get autoRewardCycle {
-    if (isDailyReward) return const Duration(hours: 24);
-    if (isWeeklyReward) return const Duration(hours: 168);
-    return null;
-  }
+  Duration? get autoRewardCycle => taskCycleByName(name);
 
   Duration? cooldownRemainingFrom(DateTime now) {
     final next = nextAvailableAt;
@@ -736,7 +732,7 @@ class ForumTaskState {
     final next = nextAvailableAt;
     if (next != null) return next.toUtc();
     final cycle = autoRewardCycle;
-    final completed = _parseForumTaskCompletedAt(completedAt);
+    final completed = parseForumTaskCompletedAt(completedAt);
     if (cycle == null || completed == null) return null;
     return completed.add(cycle).toUtc();
   }
@@ -912,7 +908,7 @@ class ForumTaskSnapshot {
     }
     return ForumTaskSnapshot(
       tasks: byName.values.toList()
-        ..sort((a, b) => _taskSort(a.name).compareTo(_taskSort(b.name))),
+        ..sort((a, b) => taskSortPriority(a.name).compareTo(taskSortPriority(b.name))),
       updatedAt: DateTime.now().toUtc(),
     );
   }
@@ -941,13 +937,19 @@ class ForumTaskSnapshot {
   }
 }
 
-int _taskSort(String name) {
+int taskSortPriority(String name) {
   if (name.contains('日常')) return 0;
   if (name.contains('周常')) return 1;
   return 2;
 }
 
-DateTime? _parseForumTaskCompletedAt(String? value) {
+Duration? taskCycleByName(String name) {
+  if (name.contains('日常')) return const Duration(hours: 24);
+  if (name.contains('周常')) return const Duration(hours: 168);
+  return null;
+}
+
+DateTime? parseForumTaskCompletedAt(String? value) {
   final text = value?.trim();
   if (text == null || text.isEmpty) return null;
   final match = RegExp(

@@ -5,6 +5,7 @@ import 'features/profile/network_setup_flow_screen.dart';
 import 'services/forum_network_config.dart';
 import 'services/forum_network_setup_store.dart';
 import 'services/forum_repository.dart';
+import 'services/local_database.dart';
 import 'theme/app_theme.dart';
 
 class SouthPlusApp extends StatefulWidget {
@@ -14,10 +15,24 @@ class SouthPlusApp extends StatefulWidget {
   State<SouthPlusApp> createState() => _SouthPlusAppState();
 }
 
-class _SouthPlusAppState extends State<SouthPlusApp> {
+class _SouthPlusAppState extends State<SouthPlusApp> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.detached) {
+      LocalDatabase.closeInstance();
+    }
   }
 
   @override

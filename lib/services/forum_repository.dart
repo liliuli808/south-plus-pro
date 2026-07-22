@@ -228,7 +228,7 @@ class ForumRepository {
           _homePageParser.parseDesktopForumSections(desktopDocument);
       if (desktopSections.isNotEmpty) sections = desktopSections;
     } catch (_) {
-      // Keep the mobile/simple directory if the desktop home is unavailable.
+      ForumTraceLogger.log('Home', 'Desktop home unavailable, using mobile version');
     }
 
     if (latest.isEmpty) {
@@ -940,8 +940,8 @@ class ForumRepository {
     ForumTask task, {
     required DateTime now,
   }) {
-    final cycle = _taskCycle(task.name);
-    final completedAt = _parseForumTaskCompletedAt(task.completedAt);
+    final cycle = taskCycleByName(task.name);
+    final completedAt = parseForumTaskCompletedAt(task.completedAt);
     if (cycle == null || completedAt == null) return true;
     return completedAt.add(cycle).isAfter(now.toUtc());
   }
@@ -1369,6 +1369,7 @@ class ForumRepository {
           _responseParser
               .loggedInUsername(await _client.get('simple/index.php'));
     } catch (_) {
+      ForumTraceLogger.log('Auth', 'Failed to fetch logged-in username');
       return null;
     }
   }
@@ -1426,6 +1427,7 @@ class ForumRepository {
 
       return ThreadFavoriteState.unknown;
     } catch (_) {
+      ForumTraceLogger.log('Favorite', 'Failed to fetch favorite state for tid=$tid');
       return ThreadFavoriteState.unknown;
     }
   }
@@ -1434,39 +1436,7 @@ class ForumRepository {
     return input.replaceAll(RegExp(r'\s+'), ' ').trim();
   }
 
-  Duration? _taskCycle(String name) {
-    if (name.contains('日常')) return const Duration(hours: 24);
-    if (name.contains('周常')) return const Duration(hours: 168);
-    return null;
-  }
 
-  DateTime? _parseForumTaskCompletedAt(String? value) {
-    final text = value?.trim();
-    if (text == null || text.isEmpty) return null;
-    final match = RegExp(
-      r'(\d{4})-(\d{2})-(\d{2})\s+(AM|PM):(\d{1,2}):(\d{2}):(\d{2})',
-      caseSensitive: false,
-    ).firstMatch(text);
-    if (match == null) return DateTime.tryParse(text)?.toUtc();
-    final year = int.tryParse(match.group(1) ?? '');
-    final month = int.tryParse(match.group(2) ?? '');
-    final day = int.tryParse(match.group(3) ?? '');
-    var hour = int.tryParse(match.group(5) ?? '');
-    final minute = int.tryParse(match.group(6) ?? '');
-    final second = int.tryParse(match.group(7) ?? '');
-    if (year == null ||
-        month == null ||
-        day == null ||
-        hour == null ||
-        minute == null ||
-        second == null) {
-      return null;
-    }
-    final marker = (match.group(4) ?? '').toUpperCase();
-    if (marker == 'PM' && hour < 12) hour += 12;
-    if (marker == 'AM' && hour == 12) hour = 0;
-    return DateTime(year, month, day, hour, minute, second).toUtc();
-  }
 
   String _canonicalThreadUrl({
     required String? parserUrl,
@@ -1487,7 +1457,7 @@ class ForumRepository {
     try {
       await _historyStore.recordThread(thread);
     } catch (_) {
-      // Browsing must keep working even if local history persistence fails.
+      ForumTraceLogger.log('History', 'Failed to record browsing history for ${thread.url}');
     }
   }
 
