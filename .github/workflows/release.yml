@@ -55,8 +55,8 @@ jobs:
           set -euo pipefail
 
           if [[ -z "${ANDROID_KEYSTORE_BASE64}" ]]; then
-            echo "ANDROID_KEYSTORE_BASE64 is not configured."
-            exit 1
+            echo "ANDROID_KEYSTORE_BASE64 is not configured. Building unsigned APK."
+            exit 0
           fi
 
           echo "${ANDROID_KEYSTORE_BASE64}" | base64 --decode > android/app/upload-keystore.jks
