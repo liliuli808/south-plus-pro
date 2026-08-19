@@ -977,7 +977,7 @@ void main() {
     );
   });
 
-  testWidgets('download links render preview and download actions',
+  testWidgets('download link panel opens externally and long-press copies',
       (tester) async {
     final clipboardWrites = <String>[];
     tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
@@ -1019,46 +1019,16 @@ void main() {
     );
 
     expect(find.text(magnetUrl), findsOneWidget);
-    expect(find.text('复制'), findsOneWidget);
-    expect(find.text('预览'), findsOneWidget);
-    expect(find.text('下载'), findsOneWidget);
+    expect(find.text('复制'), findsNothing);
+    expect(find.text('预览'), findsNothing);
+    expect(find.text('下载'), findsNothing);
 
-    await tester.tap(find.text('复制'));
+    await tester.longPress(find.text(magnetUrl));
     await tester.pump();
 
     final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
     expect(clipboardData?.text, magnetUrl);
     expect(find.text('链接已复制'), findsOneWidget);
-  });
-
-  testWidgets('download link preview dialog includes copy action',
-      (tester) async {
-    const magnetUrl =
-        'magnet:?xt=urn:btih:abcdef1234567890abcdef1234567890abcdef12';
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: ThreadRichContent(
-            segments: const [
-              ThreadContentSegment.text(magnetUrl),
-            ],
-          ),
-        ),
-      ),
-    );
-
-    await tester.tap(find.text('预览'));
-    await tester.pumpAndSettle();
-
-    expect(find.byType(AlertDialog), findsOneWidget);
-    expect(
-      find.descendant(
-        of: find.byType(AlertDialog),
-        matching: find.text('复制'),
-      ),
-      findsOneWidget,
-    );
   });
 
   testWidgets('ThreadRichContent renders emoji without manual-load placeholder',
@@ -1112,9 +1082,9 @@ void main() {
     expect(find.textContaining('前置文本', findRichText: true), findsOneWidget);
     expect(find.textContaining('引用内容', findRichText: true), findsOneWidget);
     expect(find.text(magnetUrl), findsOneWidget);
-    expect(find.text('复制'), findsOneWidget);
-    expect(find.text('预览'), findsOneWidget);
-    expect(find.text('下载'), findsOneWidget);
+    expect(find.text('复制'), findsNothing);
+    expect(find.text('预览'), findsNothing);
+    expect(find.text('下载'), findsNothing);
   });
 
   testWidgets('thread detail shows avatar fallback and page controls',

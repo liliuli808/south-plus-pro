@@ -208,12 +208,13 @@ class ThreadPostRenderModel {
             continue;
           }
           final plainText = segment.text ?? '';
-          if (_appendDownloadAwareTextBlocks(
+          final urlResult = _appendUrlAwareTextBlocks(
             plainText: plainText,
             style: style,
             addBlock: addBlock,
-          )) {
-            hasDownloadLinks = true;
+          );
+          if (urlResult.handled) {
+            hasDownloadLinks = hasDownloadLinks || urlResult.hasDownloadLinks;
             continue;
           }
           addBlock(ThreadTextRenderBlock(text: plainText, style: style));
@@ -267,43 +268,51 @@ class ThreadPostRenderModel {
   bool get isEmpty => blocks.isEmpty;
 }
 
-bool _appendDownloadAwareTextBlocks({
+({bool handled, bool hasDownloadLinks}) _appendUrlAwareTextBlocks({
   required String plainText,
   required ThreadTextStyleData style,
   required void Function(ThreadRenderBlock block) addBlock,
 }) {
-  final matches = forumDownloadLinkPattern.allMatches(plainText).toList();
-  if (matches.isEmpty) return false;
+  final matches = forumDiscreteUrlPattern.allMatches(plainText).toList();
+  if (matches.isEmpty) return (handled: false, hasDownloadLinks: false);
 
   var cursor = 0;
-  var foundPreviewable = false;
+  var hasDownloadLinks = false;
   for (final match in matches) {
     final rawUrl = match.group(0);
     if (rawUrl == null) continue;
     final url = forumTrimDownloadUrl(rawUrl);
-    if (!isForumPreviewableDownloadLink(url)) continue;
-    foundPreviewable = true;
+    if (url.isEmpty) continue;
 
     final before = plainText.substring(cursor, match.start);
     if (before.isNotEmpty) {
       addBlock(ThreadTextRenderBlock(text: before, style: style));
     }
-    addBlock(
-      ThreadDownloadLinkRenderBlock(
-        label: forumDownloadLinkLabel(null, url),
-        url: url,
-      ),
-    );
+    if (isForumPreviewableDownloadLink(url)) {
+      hasDownloadLinks = true;
+      addBlock(
+        ThreadDownloadLinkRenderBlock(
+          label: forumDownloadLinkLabel(null, url),
+          url: url,
+        ),
+      );
+    } else {
+      addBlock(
+        ThreadLinkRenderBlock(
+          text: url,
+          url: url,
+          style: style,
+        ),
+      );
+    }
     cursor = match.start + url.length;
   }
-
-  if (!foundPreviewable) return false;
 
   final after = plainText.substring(cursor);
   if (after.isNotEmpty) {
     addBlock(ThreadTextRenderBlock(text: after, style: style));
   }
-  return true;
+  return (handled: true, hasDownloadLinks: hasDownloadLinks);
 }
 
 enum ThreadDetailListEntryType {
@@ -421,7 +430,9 @@ final forumDownloadFilePattern = RegExp(
   caseSensitive: false,
 );
 
-final forumDownloadLinkPattern = RegExp(
-  "(magnet:\\?[^\\s<>\"']+|ed2k://[^\\s<>\"']+|https?://[^\\s<>\"']+\\.(?:torrent|zip|rar|7z|iso|mkv|mp4|avi|wmv|mov|apk|exe)(?:[?#][^\\s<>\"']*)?)",
+final forumDiscreteUrlPattern = RegExp(
+  r"(magnet:\?[^\s<>\"'\u3000-\u303f\u4e00-\u9fff\uff00-\uffef]+|"
+  r"ed2k://[^\s<>\"'\u3000-\u303f\u4e00-\u9fff\uff00-\uffef]+|"
+  r"https?://[^\s<>\"'\u3000-\u303f\u4e00-\u9fff\uff00-\uffef]+)",
   caseSensitive: false,
 );
