@@ -50,6 +50,10 @@ class ThreadContentParser {
         final saleBox = _saleBoxFromElement(node);
         if (saleBox != null) {
           segments.add(ThreadContentSegment.saleBox(saleBox));
+        } else {
+          for (final child in node.nodes) {
+            walk(child);
+          }
         }
         return;
       }

@@ -64,6 +64,78 @@ void main() {
     expect(segments[2].url, 'https://example.com/1.webp');
   });
 
+  test('extractInlineSegments reveals content of purchased sale box', () {
+    final fragment = html_parser.parseFragment('''
+      <div class="f14">
+        <h6 class="quote jumbotron">
+          <span class="s3 f12 fn">此帖售价 5 SP币,已有 8 人购买</span>
+          <br>
+          已购买的内容
+          <img src="https://example.com/1.webp">
+        </h6>
+      </div>
+    ''');
+    final content = fragment.querySelector('.f14')!;
+
+    final segments = ThreadContentParser().extractInlineSegments(content);
+
+    expect(segments, hasLength(2));
+    expect(segments[0].type, ThreadContentSegmentType.text);
+    expect(segments[0].text, contains('已购买的内容'));
+    expect(segments[1].type, ThreadContentSegmentType.image);
+    expect(segments[1].url, 'https://example.com/1.webp');
+  });
+
+  test('ThreadDetailParser keeps purchased sale box content in segments',
+      () {
+    final document = html_parser.parse('''
+      <html>
+        <body>
+          <table class="js-post">
+            <tr class="tr1">
+              <th class="r_two" rowspan="2">
+                <div class="user-pic">
+                  <a href="u.php?action-show-uid-123.html">
+                    <img src="images/face/a6.gif" alt="a6.gif">
+                  </a>
+                </div>
+                <a href="u.php?action-show-uid-123.html">
+                  <strong>Alice</strong>
+                </a>
+              </th>
+              <th class="r_one" id="td_1">
+                <div class="tiptop">
+                  <span class="fl"><a class="s3">B1F</a></span>
+                  <span class="fl gray" title="发表于: 2026-05-29 12:30">
+                    2026-05-29 12:30
+                  </span>
+                </div>
+                <div class="tpc_content">
+                  <div class="f14" id="read_1">
+                    <h6 class="quote jumbotron">
+                      <span class="s3 f12 fn">此帖售价 5 SP币,已有 8 人购买</span>
+                      <br>
+                      已购买的内容
+                      <img src="https://example.com/1.webp">
+                    </h6>
+                  </div>
+                </div>
+              </th>
+            </tr>
+          </table>
+        </body>
+      </html>
+    ''');
+
+    final replies = ThreadDetailParser().desktopThreadCards(document);
+
+    expect(replies, hasLength(1));
+    expect(replies.single.saleBoxes, isEmpty);
+    expect(replies.single.segments, hasLength(2));
+    expect(replies.single.segments[0].text, contains('已购买的内容'));
+    expect(replies.single.segments[1].url, 'https://example.com/1.webp');
+  });
+
   test('WhatsLinkPreviewService treats empty api error as success', () {
     final error = WhatsLinkPreviewService.apiErrorMessage({
       'error': '',
