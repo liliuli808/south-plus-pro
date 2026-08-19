@@ -431,8 +431,8 @@ final forumDownloadFilePattern = RegExp(
 );
 
 final forumDiscreteUrlPattern = RegExp(
-  r"(magnet:\?[^\s<>\"'\u3000-\u303f\u4e00-\u9fff\uff00-\uffef]+|"
-  r"ed2k://[^\s<>\"'\u3000-\u303f\u4e00-\u9fff\uff00-\uffef]+|"
-  r"https?://[^\s<>\"'\u3000-\u303f\u4e00-\u9fff\uff00-\uffef]+)",
+  "(magnet:\\?[^\\s<>\"'\u3000-\u303f\u4e00-\u9fff\uff00-\uffef]+|"
+  "ed2k://[^\\s<>\"'\u3000-\u303f\u4e00-\u9fff\uff00-\uffef]+|"
+  "https?://[^\\s<>\"'\u3000-\u303f\u4e00-\u9fff\uff00-\uffef]+)",
   caseSensitive: false,
 );

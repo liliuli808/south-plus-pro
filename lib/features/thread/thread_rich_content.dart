@@ -297,8 +297,8 @@ class _DownloadLinkPanel extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Padding(
-                    padding: EdgeInsets.only(top: 1),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 1),
                     child: Icon(
                       Icons.open_in_new,
                       size: 16,
@@ -311,7 +311,7 @@ class _DownloadLinkPanel extends StatelessWidget {
                       label,
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.link,
                         fontSize: 12,
                         height: 1.35,
