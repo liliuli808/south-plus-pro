@@ -86,6 +86,40 @@ void main() {
     expect(segments[1].url, 'https://example.com/1.webp');
   });
 
+  test('extractInlineSegments keeps sibling blockquote of purchased sale box',
+      () {
+    final fragment = html_parser.parseFragment('''
+      <div class="f14">
+        <h6 class="quote jumbotron">
+          <span class="s3 f12 fn">此帖售价 5 SP币,已有 8 人购买</span>
+        </h6>
+        <blockquote class="blockquote jumbotron">
+          已购买的内容
+          <img src="https://example.com/1.webp">
+        </blockquote>
+      </div>
+    ''');
+    final content = fragment.querySelector('.f14')!;
+
+    final segments = ThreadContentParser().extractInlineSegments(content);
+
+    final quote = segments.singleWhere(
+      (segment) => segment.type == ThreadContentSegmentType.quote,
+    );
+    expect(
+      quote.children.any((child) =>
+          child.type == ThreadContentSegmentType.text &&
+          (child.text?.contains('已购买的内容') ?? false)),
+      isTrue,
+    );
+    expect(
+      quote.children.any((child) =>
+          child.type == ThreadContentSegmentType.image &&
+          child.url == 'https://example.com/1.webp'),
+      isTrue,
+    );
+  });
+
   test('ThreadDetailParser keeps purchased sale box content in segments',
       () {
     final document = html_parser.parse('''

@@ -220,7 +220,12 @@ class ThreadContentParser {
   String? _buyPathFromOnclick(String onclick) {
     final match = RegExp("location\\.href\\s*=\\s*['\\\"]([^'\\\"]+)['\\\"]")
         .firstMatch(onclick);
-    return match?.group(1);
+    final path = match?.group(1);
+    if (path == null || path.isEmpty) return null;
+    // Purchase-record links are not buy actions; a box whose only button
+    // points at the record page is already purchased.
+    if (path.contains('type=record')) return null;
+    return path;
   }
 
   dom.Element? _saleWarningElement(dom.Element saleElement) {
@@ -240,7 +245,13 @@ class ThreadContentParser {
       return false;
     }
     final previous = element.previousElementSibling;
-    return previous != null && _isSaleBoxElement(previous);
+    if (previous == null || !_isSaleBoxElement(previous)) return false;
+    // Only the sibling of an unpurchased sale box is a purchase warning.
+    // A purchased box has no buy path, and its sibling blockquote carries
+    // the revealed content instead.
+    final input = previous.querySelector('input[type="button"]');
+    final onclick = input?.attributes['onclick'] ?? '';
+    return _buyPathFromOnclick(onclick) != null;
   }
 
   String _cleanText(String input) {

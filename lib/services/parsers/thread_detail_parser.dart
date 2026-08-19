@@ -408,7 +408,12 @@ class ThreadDetailParser {
   String? _buyPathFromOnclick(String onclick) {
     final match = RegExp("location\\.href\\s*=\\s*['\\\"]([^'\\\"]+)['\\\"]")
         .firstMatch(onclick);
-    return match?.group(1);
+    final path = match?.group(1);
+    if (path == null || path.isEmpty) return null;
+    // Purchase-record links are not buy actions; a box whose only button
+    // points at the record page is already purchased.
+    if (path.contains('type=record')) return null;
+    return path;
   }
 
   dom.Element? _saleWarningElement(dom.Element saleElement) {
